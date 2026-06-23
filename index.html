@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>OCR Bill — จัดการบิลด้วย OCR</title>
+  <meta name="description" content="จัดการบิลเงินด้วย OCR วิเคราะห์ตัวหนังสือจากใบเสร็จ รองรับไทยและอังกฤษ" />
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧾</text></svg>" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="logo">🧾</span>
+      <div>
+        <h1>OCR Bill</h1>
+        <p class="tagline">จัดการบิลเงินด้วย OCR • ocr-bill-claude-glm52</p>
+      </div>
+    </div>
+    <nav class="tabs" role="tablist">
+      <button class="tab active" data-tab="scan" role="tab">📷 สแกนบิล</button>
+      <button class="tab" data-tab="bills" role="tab">📚 ประวัติบิล</button>
+      <button class="tab" data-tab="stats" role="tab">📊 สรุป</button>
+    </nav>
+  </header>
+
+  <main class="container">
+    <!-- ===== SCAN TAB ===== -->
+    <section id="tab-scan" class="panel active">
+      <div class="dropzone" id="dropzone" tabindex="0">
+        <input type="file" id="fileInput" accept="image/*" hidden />
+        <div class="dropzone-inner">
+          <span class="dz-icon">⬆️</span>
+          <p class="dz-title">ลากรูปใบเสร็จมาวาง หรือคลิกเลือกไฟล์</p>
+          <p class="dz-sub">รองรับ JPG / PNG / WEBP — ประมวลผลในเครื่องของคุณ ภาพไม่ออกจากอุปกรณ์</p>
+          <div class="dz-actions">
+            <button type="button" class="btn primary" id="pickFileBtn">เลือกไฟล์รูป</button>
+            <button type="button" class="btn" id="cameraBtn">📸 ถ่ายจากกล้อง</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="preview-wrap" id="previewWrap" hidden>
+        <div class="preview-card">
+          <img id="previewImg" alt="ตัวอย่างใบเสร็จ" />
+          <div class="preview-tools">
+            <button type="button" class="btn danger" id="clearImgBtn">🗑 ลบรูป</button>
+            <button type="button" class="btn primary" id="runOcrBtn">รัน OCR</button>
+          </div>
+        </div>
+
+        <div class="ocr-status" id="ocrStatus" hidden>
+          <div class="status-line">
+            <span id="ocrStatusText">กำลังเตรียมเครื่องมือ…</span>
+            <span id="ocrPercent">0%</span>
+          </div>
+          <progress id="ocrProgress" max="100" value="0"></progress>
+        </div>
+      </div>
+
+      <div class="result-wrap" id="resultWrap" hidden>
+        <h2>ผลการวิเคราะห์</h2>
+
+        <div class="result-grid">
+          <div class="result-col">
+            <h3>ข้อความดิบ (Raw Text)</h3>
+            <textarea id="rawText" rows="14" placeholder="ข้อความที่ OCR อ่านได้จะแสดงที่นี่…"></textarea>
+            <div class="reparse-row">
+              <button type="button" class="btn" id="reparseBtn">🔄 แยกข้อมูลใหม่จากข้อความ</button>
+              <button type="button" class="btn" id="copyRawBtn">📋 คัดลอกข้อความ</button>
+            </div>
+          </div>
+
+          <div class="result-col">
+            <h3>ข้อมูลที่แยกได้ (แก้ไขได้)</h3>
+            <label>ชื่อร้าน / ผู้ออกบิล
+              <input type="text" id="fStore" placeholder="เช่น ร้านอาหาร ABC" />
+            </label>
+            <label>วันที่
+              <input type="text" id="fDate" placeholder="เช่น 24/06/2026" />
+            </label>
+            <label>ยอดรวม (บาท)
+              <input type="number" id="fTotal" step="0.01" placeholder="0.00" />
+            </label>
+            <label>หมวดหมู่
+              <select id="fCategory">
+                <option value="อาหาร">อาหาร</option>
+                <option value="ช้อปปิ้ง">ช้อปปิ้ง</option>
+                <option value="เดินทาง">เดินทาง</option>
+                <option value="บันเทิง">บันเทิง</option>
+                <option value="สาธารณูปโภค">สาธารณูปโภค</option>
+                <option value="อื่นๆ">อื่นๆ</option>
+              </select>
+            </label>
+
+            <h4>รายการสินค้า/บริการ</h4>
+            <table class="items-table">
+              <thead>
+                <tr><th>ชื่อรายการ</th><th class="num">จำนวน</th><th class="num">ราคา/หน่วย</th><th class="num">รวม</th><th></th></tr>
+              </thead>
+              <tbody id="itemsBody"></tbody>
+            </table>
+            <button type="button" class="btn small" id="addItemBtn">+ เพิ่มรายการ</button>
+
+            <label>หมายเหตุ
+              <input type="text" id="fNote" placeholder="หมายเหตุเพิ่มเติม (ไม่บังคับ)" />
+            </label>
+
+            <div class="save-row">
+              <button type="button" class="btn primary" id="saveBillBtn">💾 บันทึกบิล</button>
+              <button type="button" class="btn" id="resetScanBtn">เริ่มใหม่</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== BILLS TAB ===== -->
+    <section id="tab-bills" class="panel" hidden>
+      <div class="toolbar">
+        <input type="search" id="searchInput" placeholder="🔍 ค้นหาตามร้าน / รายการ / หมายเหตุ…" />
+        <select id="filterCategory">
+          <option value="">ทุกหมวดหมู่</option>
+          <option value="อาหาร">อาหาร</option>
+          <option value="ช้อปปิ้ง">ช้อปปิ้ง</option>
+          <option value="เดินทาง">เดินทาง</option>
+          <option value="บันเทิง">บันเทิง</option>
+          <option value="สาธารณูปโภค">สาธารณูปโภค</option>
+          <option value="อื่นๆ">อื่นๆ</option>
+        </select>
+        <select id="sortBy">
+          <option value="date-desc">วันที่บิล (ใหม่→เก่า)</option>
+          <option value="date-asc">วันที่บิล (เก่า→ใหม่)</option>
+          <option value="created-desc">วันที่เพิ่ม (ใหม่→เก่า)</option>
+          <option value="amount-desc">ยอดรวม (มาก→น้อย)</option>
+          <option value="amount-asc">ยอดรวม (น้อย→มาก)</option>
+        </select>
+        <button type="button" class="btn" id="exportCsvBtn">⬇️ CSV</button>
+        <button type="button" class="btn" id="exportJsonBtn">⬇️ JSON</button>
+        <button type="button" class="btn danger" id="clearAllBtn">ล้างทั้งหมด</button>
+      </div>
+
+      <div class="bill-list" id="billList"></div>
+      <p class="empty-hint" id="billsEmpty" hidden>ยังไม่มีบิลในระบบ — ไปแท็บ "สแกนบิล" เพื่อเริ่มวิเคราะห์ใบเสร็จแรกของคุณ</p>
+    </section>
+
+    <!-- ===== STATS TAB ===== -->
+    <section id="tab-stats" class="panel" hidden>
+      <div class="stats-cards" id="statsCards"></div>
+      <h3>ยอดรวมตามหมวดหมู่</h3>
+      <div class="category-bars" id="categoryBars"></div>
+      <h3>ล่าสุด</h3>
+      <div class="recent-list" id="recentList"></div>
+    </section>
+  </main>
+
+  <div class="toast" id="toast" hidden></div>
+  <div class="modal" id="modal" hidden>
+    <div class="modal-card">
+      <h3 id="modalTitle"></h3>
+      <div id="modalBody"></div>
+      <div class="modal-actions">
+        <button type="button" class="btn" id="modalCancel">ยกเลิก</button>
+        <button type="button" class="btn danger" id="modalConfirm">ตกลง</button>
+      </div>
+    </div>
+  </div>
+
+  <footer class="footer">
+    <span>ocr-bill-claude-glm52 • OCR ด้วย Tesseract.js • ข้อมูลเก็บในเครื่องของคุณเท่านั้น</span>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
