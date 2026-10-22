@@ -1,3 +1,15 @@
+<!-- BBN:HEADER:START -->
+<div align="center">
+
+<img src=".github/brand/banner.svg" width="100%" alt="OCR Bill Manager · Claude — In-browser receipt OCR with Tesseract.js, no backend" />
+
+<a href="https://github.com/Boom-Vitt/ocr-bill-claude-glm52/stargazers"><img src="https://img.shields.io/github/stars/Boom-Vitt/ocr-bill-claude-glm52?style=flat-square&color=14b8a6&labelColor=0b1220" alt="stars" /></a>
+<a href="https://github.com/Boom-Vitt/ocr-bill-claude-glm52/commits/main"><img src="https://img.shields.io/github/last-commit/Boom-Vitt/ocr-bill-claude-glm52?style=flat-square&color=14b8a6&labelColor=0b1220" alt="last commit" /></a>
+<a href="https://github.com/Boom-Vitt"><img src="https://img.shields.io/badge/by-BoomBigNose-14b8a6?style=flat-square&labelColor=0b1220" alt="by BoomBigNose" /></a>
+
+</div>
+<!-- BBN:HEADER:END -->
+
 # 🧾 ocr-bill-claude-glm52
 
 เว็บแอปจัดการบิลเงินด้วย **OCR** — ถ่าย/อัปโหลดใบเสร็จแล้วระบบอ่านตัวหนังสือออกมาเป็นข้อความ พร้อมแยก ร้าน / วันที่ / ยอดรวม / รายการสินค้า อัตโนมัติ
@@ -34,3 +46,15 @@ app.js        # ตรรกะ OCR + parse + จัดการบิล
 
 ---
 ocr-bill-claude-glm52 • ข้อมูลเก็บในเครื่องของคุณเท่านั้น
+
+<!-- BBN:FOOTER:START -->
+---
+
+<div align="center">
+
+**สร้างโดย [BoomBigNose](https://github.com/Boom-Vitt)** · [Kruoop.com](https://kruoop.com) แหล่งเรียน AI + คอมมูนิตี้ · [Seeneo.ai](https://seeneo.ai) · [YouTube 220K](https://www.youtube.com/@BoomBigNose)
+
+<sub>ถ้าโปรเจกต์นี้มีประโยชน์ กด ⭐ ให้กำลังใจกันได้เลย</sub>
+
+</div>
+<!-- BBN:FOOTER:END -->
